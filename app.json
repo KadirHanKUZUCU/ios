@@ -1,0 +1,38 @@
+{
+  "expo": {
+    "name": "SpamFilter",
+    "slug": "spam-filter",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "bundleIdentifier": "com.app.spamfilter",
+      "supportsTablet": false,
+      "entitlements": {
+        "com.apple.security.application-groups": [
+          "group.com.app.spamfilter"
+        ]
+      }
+    },
+    "android": {
+      "package": "com.app.spamfilter",
+      "adaptiveIcon": {
+        "backgroundColor": "#ffffff"
+      },
+      "permissions": [
+        "android.permission.RECEIVE_SMS",
+        "android.permission.READ_PHONE_STATE",
+        "android.permission.ANSWER_PHONE_CALLS",
+        "android.permission.CALL_SCREENING_APP"
+      ]
+    },
+    "plugins": [
+      "./plugins/withSpamFilter.js",
+      "expo-status-bar"
+    ]
+  }
+}
