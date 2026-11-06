@@ -72,7 +72,7 @@ export const SimulatorScreen: React.FC<Props> = ({ rules }) => {
 
       {/* Mesaj Giriş Kartı */}
       <View style={styles.card}>
-        <Text style={styles.cardTitle}>Simüle Edilecek SMS</Text>
+        <Text style={styles.cardTitle}>🔬 Analiz Edilecek SMS Metni</Text>
 
         <Text style={styles.inputLabel}>Gönderen (Başlık veya Numara):</Text>
         <TextInput
@@ -96,7 +96,7 @@ export const SimulatorScreen: React.FC<Props> = ({ rules }) => {
         />
 
         <TouchableOpacity style={styles.runButton} onPress={handleRunSimulation}>
-          <Text style={styles.runButtonText}>⚡ Simülasyonu Çalıştır</Text>
+          <Text style={styles.runButtonText}>⚡ Kural Motoru ile Analiz Et</Text>
         </TouchableOpacity>
       </View>
 

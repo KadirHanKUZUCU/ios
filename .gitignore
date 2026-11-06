@@ -3,3 +3,7 @@ node_modules/
 npm-debug.*
 *.orig.*
 .DS_Store
+*.zip
+*.ipa
+SpamFilter-IPA/
+

@@ -25,6 +25,9 @@ jobs:
       - name: 📱 Expo Prebuild ile iOS Projesini Oluştur
         run: npx expo prebuild --platform ios --clean
 
+      - name: 🧩 iOS MessageFilter & CallKit Extension Hedeflerini Xcode Projesine Ekle
+        run: ruby scripts/add_ios_extensions.rb
+
       - name: ☕ CocoaPods Bağımlılıklarını Kur
         run: |
           cd ios
@@ -48,6 +51,8 @@ jobs:
         run: |
           mkdir -p Payload
           cp -R build/SpamFilter.xcarchive/Products/Applications/SpamFilter.app Payload/
+          echo "=== Paket İçi Eklentiler (PlugIns) Listesi ==="
+          ls -la Payload/SpamFilter.app/PlugIns || echo "PlugIns klasörü bulunamadı!"
           zip -r -9 SpamFilter.ipa Payload
           ls -la SpamFilter.ipa
 

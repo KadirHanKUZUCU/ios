@@ -71,9 +71,9 @@ export default function App() {
           style={[styles.navItem, activeTab === 'vault' && styles.activeNavItem]}
           onPress={() => setActiveTab('vault')}
         >
-          <Text style={styles.navIcon}>📁</Text>
+          <Text style={styles.navIcon}>🛡️</Text>
           <Text style={[styles.navText, activeTab === 'vault' && styles.activeNavTextBlue]}>
-            Klasörler
+            Kalkan
           </Text>
         </TouchableOpacity>
 
