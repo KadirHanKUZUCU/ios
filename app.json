@@ -14,8 +14,12 @@
       "supportsTablet": false,
       "entitlements": {
         "com.apple.security.application-groups": [
+          "group.com.app.spamfilter",
           "group.com.app.spamfilter"
         ]
+      },
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
@@ -33,6 +37,11 @@
     "plugins": [
       "./plugins/withSpamFilter.js",
       "expo-status-bar"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "87a26643-832f-4d0f-a943-06197afcb6cb"
+      }
+    }
   }
 }
