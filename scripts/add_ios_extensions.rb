@@ -45,6 +45,9 @@ begin
 
     # Group & Swift File References
     ext_group = project.main_group.find_subpath(name, true)
+    ext_group.path = name
+    ext_group.source_tree = '<group>'
+
     swift_files = Dir.glob("ios/#{name}/*.swift")
     puts "   Found #{swift_files.count} Swift files in ios/#{name}"
 
@@ -52,7 +55,11 @@ begin
       basename = File.basename(f)
       ext_group.find_file_by_path(basename) || ext_group.new_file(basename)
     end
-    target.add_file_references(file_refs)
+    
+    # Avoid duplicate references in sources build phase
+    existing_file_refs = target.source_build_phase.files.map(&:file_ref)
+    new_refs = file_refs.reject { |ref| existing_file_refs.include?(ref) }
+    target.add_file_references(new_refs)
 
     # Framework
     if framework_name
@@ -72,6 +79,8 @@ begin
     target.build_configuration_list.set_setting('CODE_SIGNING_REQUIRED', 'NO')
     target.build_configuration_list.set_setting('CODE_SIGN_IDENTITY', '')
     target.build_configuration_list.set_setting('GENERATE_INFOPLIST_FILE', 'NO')
+    target.build_configuration_list.set_setting('ENABLE_BITCODE', 'NO')
+    target.build_configuration_list.set_setting('ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES', 'NO')
 
     # Embed in main target PlugIns
     already_embedded = embed_phase.files.any? { |bf| bf.file_ref == target.product_reference }

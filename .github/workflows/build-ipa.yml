@@ -40,26 +40,34 @@ jobs:
           cd ios
           pod install --repo-update
 
-      - name: 🔨 Xcode ile İzasız Arşiv (xcarchive) Oluştur
+      - name: 🔨 Xcode ile İzasız .app Derlemesi Yap
         run: |
           cd ios
-          xcodebuild archive \
+          set -o pipefail
+          xcodebuild \
             -workspace SpamFilter.xcworkspace \
             -scheme SpamFilter \
             -configuration Release \
             -sdk iphoneos \
             -destination "generic/platform=iOS" \
-            -archivePath "../build/SpamFilter.xcarchive" \
+            -derivedDataPath "../build" \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGNING_ALLOWED=NO
+            CODE_SIGNING_ALLOWED=NO \
+            build 2>&1 | tee xcodebuild.log || {
+              echo "❌ Xcode derlemesi başarısız oldu! İşte son 100 satır hata kaydı:"
+              tail -n 100 xcodebuild.log
+              exit 1
+            }
 
       - name: 📦 Sideloadly Uyumlu .IPA Paketini Paketle
         run: |
           mkdir -p Payload
-          cp -R build/SpamFilter.xcarchive/Products/Applications/SpamFilter.app Payload/
+          cp -R build/Build/Products/Release-iphoneos/SpamFilter.app Payload/
           echo "=== Paket İçi Eklentiler (PlugIns) Listesi ==="
-          ls -la Payload/SpamFilter.app/PlugIns || echo "PlugIns klasörü bulunamadı!"
+          ls -la Payload/SpamFilter.app/PlugIns
+          test -d Payload/SpamFilter.app/PlugIns/MessageFilterExtension.appex || { echo "❌ MessageFilterExtension.appex eksik!"; exit 1; }
+          test -d Payload/SpamFilter.app/PlugIns/CallDirectoryExtension.appex || { echo "❌ CallDirectoryExtension.appex eksik!"; exit 1; }
           zip -r -9 SpamFilter.ipa Payload
           ls -la SpamFilter.ipa
 
