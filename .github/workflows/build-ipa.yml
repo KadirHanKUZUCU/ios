@@ -16,7 +16,7 @@ jobs:
       - name: 🟢 Node.js Ortamını Hazırla
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: 'npm'
 
       - name: 📦 NPM Bağımlılıklarını Yükle
@@ -27,7 +27,7 @@ jobs:
 
       - name: 🧩 iOS MessageFilter & CallKit Extension Hedeflerini Xcode Projesine Ekle
         run: |
-          gem install xcodeproj --no-document
+          sudo gem install xcodeproj --no-document
           ruby scripts/add_ios_extensions.rb
 
       - name: ☕ CocoaPods Bağımlılıklarını Kur

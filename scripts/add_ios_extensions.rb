@@ -15,10 +15,11 @@ unless main_target
 end
 
 # Make sure Embed App Extensions phase exists
-embed_phase = main_target.copy_files_build_phases.find { |p| p.name == 'Embed App Extensions' || p.dst_subfolder_spec == 13 }
+embed_phase = main_target.copy_files_build_phases.find { |p| p.name == 'Embed App Extensions' }
 unless embed_phase
   embed_phase = main_target.new_copy_files_build_phase('Embed App Extensions')
-  embed_phase.dst_subfolder_spec = 13 # 13 corresponds to "PlugIns"
+  embed_phase.dst_subfolder_spec = :plug_ins # PlugIns folder
+  embed_phase.dst_path = ''
 end
 
 def configure_extension(project, main_target, embed_phase, name, bundle_suffix, framework_name)
@@ -67,8 +68,10 @@ def configure_extension(project, main_target, embed_phase, name, bundle_suffix, 
   end
 
   # Embed in main target PlugIns
-  build_file = embed_phase.add_file_reference(target.product_reference)
+  build_file = project.new(Xcodeproj::Project::Object::PBXBuildFile)
+  build_file.file_ref = target.product_reference
   build_file.settings = { 'ATTRIBUTES' => ['RemoveHeadersOnCopy'] }
+  embed_phase.files << build_file
 
   # Add dependency so building main target automatically builds this extension
   main_target.add_dependency(target)
@@ -85,4 +88,3 @@ configure_extension(project, main_target, embed_phase, 'CallDirectoryExtension',
 
 project.save
 puts "🎉 Successfully saved #{project_path} with all extensions linked to PlugIns!"
-
