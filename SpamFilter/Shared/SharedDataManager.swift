@@ -171,3 +171,13 @@ public final class SharedDataManager: @unchecked Sendable {
     }
 }
 
+// MARK: - Array IndexSet Extension
+extension Array {
+    public mutating func remove(atOffsets offsets: IndexSet) {
+        for index in offsets.sorted(by: >) {
+            guard indices.contains(index) else { continue }
+            remove(at: index)
+        }
+    }
+}
+
