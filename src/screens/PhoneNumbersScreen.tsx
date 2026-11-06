@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -9,6 +9,8 @@ import {
   Alert,
 } from 'react-native';
 import { FilterRules } from '../types';
+import { QuietHoursService, QuietHoursSettings } from '../services/QuietHoursService';
+import { QuietHoursModal } from '../components/QuietHoursModal';
 
 interface Props {
   rules: FilterRules;
@@ -18,6 +20,29 @@ interface Props {
 export const PhoneNumbersScreen: React.FC<Props> = ({ rules, onUpdateRules }) => {
   const [activeTab, setActiveTab] = useState<'prefixes' | 'custom'>('prefixes');
   const [inputText, setInputText] = useState('');
+
+  // Gece Sessizliği Durumu ve Modalı
+  const [quietHoursModalVisible, setQuietHoursModalVisible] = useState(false);
+  const [quietHoursSettings, setQuietHoursSettings] = useState<QuietHoursSettings>({
+    isEnabled: true,
+    startTime: '22:00',
+    endTime: '08:00',
+    blockAllUnknownCorporate: true,
+  });
+
+  useEffect(() => {
+    loadQuietHours();
+  }, []);
+
+  const loadQuietHours = async () => {
+    const settings = await QuietHoursService.getSettings();
+    setQuietHoursSettings(settings);
+  };
+
+  const handleSaveQuietHours = async (newSettings: QuietHoursSettings) => {
+    setQuietHoursSettings(newSettings);
+    await QuietHoursService.saveSettings(newSettings);
+  };
 
   const sanitizeNumber = (input: string): string => {
     let cleaned = input.replace(/[^0-9]/g, '');
@@ -73,9 +98,44 @@ export const PhoneNumbersScreen: React.FC<Props> = ({ rules, onUpdateRules }) =>
   };
 
   const currentList = activeTab === 'prefixes' ? rules.blockedNumberPrefixes : rules.customBlockedNumbers;
+  const isQuietHoursActive = QuietHoursService.isCurrentlyQuietHours(quietHoursSettings);
 
   return (
     <View style={styles.container}>
+      {/* 🌙 Gece Sessizliği (Call Quiet Hours) Kontrol Kartı */}
+      <View style={styles.quietHoursCard}>
+        <View style={styles.quietHoursHeader}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <Text style={{ fontSize: 22 }}>🌙</Text>
+            <View>
+              <Text style={styles.quietHoursTitle}>Gece Sessizliği (Quiet Hours)</Text>
+              <Text style={styles.quietHoursStatus}>
+                {quietHoursSettings.isEnabled
+                  ? `${quietHoursSettings.startTime} - ${quietHoursSettings.endTime} (Kurumsal Engelleme)`
+                  : 'Devre Dışı'}
+              </Text>
+            </View>
+          </View>
+
+          <TouchableOpacity
+            style={styles.editHoursBtn}
+            onPress={() => setQuietHoursModalVisible(true)}
+          >
+            <Text style={styles.editHoursBtnText}>Saatleri Seç</Text>
+          </TouchableOpacity>
+        </View>
+
+        {quietHoursSettings.isEnabled && (
+          <View style={[styles.activeIndicator, isQuietHoursActive ? styles.indicatorActive : styles.indicatorIdle]}>
+            <Text style={styles.indicatorText}>
+              {isQuietHoursActive
+                ? '🟢 ŞU AN DEVREDE: 0850 ve kurumsal santral aramaları meşgule atılıyor.'
+                : `⏳ BEKLEMEDE: Bu gece ${quietHoursSettings.startTime}'de başlayacak.`}
+            </Text>
+          </View>
+        )}
+      </View>
+
       {/* Sekmeler */}
       <View style={styles.tabContainer}>
         <TouchableOpacity
@@ -127,13 +187,6 @@ export const PhoneNumbersScreen: React.FC<Props> = ({ rules, onUpdateRules }) =>
         </View>
       </View>
 
-      {/* Bilgi Notu */}
-      <View style={styles.infoBanner}>
-        <Text style={styles.infoBannerText}>
-          ℹ️ CallKit (iOS) ve CallScreening (Android) bu numaraları sistem düzeyinde doğrudan meşgule atar veya uyarır.
-        </Text>
-      </View>
-
       {/* Liste */}
       <FlatList
         data={currentList}
@@ -151,12 +204,37 @@ export const PhoneNumbersScreen: React.FC<Props> = ({ rules, onUpdateRules }) =>
           </View>
         )}
       />
+
+      {/* Gece Sessizliği Manuel Saat Seçim Modalı */}
+      <QuietHoursModal
+        visible={quietHoursModalVisible}
+        settings={quietHoursSettings}
+        onClose={() => setQuietHoursModalVisible(false)}
+        onSave={handleSaveQuietHours}
+      />
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F2F2F7', padding: 16 },
+  quietHoursCard: {
+    backgroundColor: '#EEF2FF',
+    borderRadius: 14,
+    padding: 14,
+    marginBottom: 14,
+    borderWidth: 1,
+    borderColor: '#C7D2FE',
+  },
+  quietHoursHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  quietHoursTitle: { fontSize: 14, fontWeight: 'bold', color: '#312E81' },
+  quietHoursStatus: { fontSize: 11, color: '#4F46E5', marginTop: 1, fontWeight: '500' },
+  editHoursBtn: { backgroundColor: '#4F46E5', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8 },
+  editHoursBtnText: { color: '#FFF', fontSize: 12, fontWeight: 'bold' },
+  activeIndicator: { marginTop: 10, padding: 8, borderRadius: 6 },
+  indicatorActive: { backgroundColor: '#DCFCE7' },
+  indicatorIdle: { backgroundColor: '#E0E7FF' },
+  indicatorText: { fontSize: 11, fontWeight: '600', color: '#1E293B' },
   tabContainer: { flexDirection: 'row', backgroundColor: '#E5E5EA', borderRadius: 10, padding: 4, marginBottom: 12 },
   tabButton: { flex: 1, paddingVertical: 10, alignItems: 'center', borderRadius: 8 },
   activeTab: { backgroundColor: '#EA580C' },
@@ -185,8 +263,6 @@ const styles = StyleSheet.create({
   },
   disabledBtn: { opacity: 0.5 },
   addButtonText: { color: '#FFF', fontWeight: 'bold', fontSize: 13 },
-  infoBanner: { backgroundColor: '#EFF6FF', padding: 10, borderRadius: 8, marginBottom: 12 },
-  infoBannerText: { color: '#1E40AF', fontSize: 12 },
   listContent: { paddingBottom: 20 },
   itemRow: {
     flexDirection: 'row',
@@ -201,4 +277,3 @@ const styles = StyleSheet.create({
   deleteBtn: { paddingHorizontal: 10, paddingVertical: 6, backgroundColor: '#FEE2E2', borderRadius: 6 },
   deleteBtnText: { color: '#DC2626', fontWeight: '600', fontSize: 12 },
 });
-

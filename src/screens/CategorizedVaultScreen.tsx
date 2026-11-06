@@ -314,3 +314,4 @@ const styles = StyleSheet.create({
   emptyTitle: { fontSize: 16, fontWeight: 'bold', color: '#475569', marginBottom: 4 },
   emptySubtitle: { fontSize: 12, color: '#94A3B8', textAlign: 'center', paddingHorizontal: 40 },
 });
+

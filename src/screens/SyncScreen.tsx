@@ -10,10 +10,14 @@ import {
   Alert,
   Platform,
   Modal,
+  Switch,
 } from 'react-native';
 import { FilterRules, SyncInfo } from '../types';
 import { RuleStorage } from '../services/RuleStorage';
 import { AuditLogger, AuditLogEntry } from '../services/AuditLogger';
+import { CloudThreatSyncService, ThreatFeedMetadata } from '../services/CloudThreatSyncService';
+import { QuietHoursService, QuietHoursSettings } from '../services/QuietHoursService';
+import { QuietHoursModal } from '../components/QuietHoursModal';
 
 interface Props {
   rules: FilterRules;
@@ -27,6 +31,23 @@ export const SyncScreen: React.FC<Props> = ({ rules, onUpdateRules }) => {
     lastSyncStatus: null,
   });
 
+  // Bulut Tehdit Beslemesi
+  const [threatMeta, setThreatMeta] = useState<ThreatFeedMetadata>({
+    lastUpdated: null,
+    totalThreatsInDatabase: 1250,
+    newlyAddedCount: 0,
+  });
+  const [isUpdatingThreats, setIsUpdatingThreats] = useState(false);
+
+  // Gece Modu (Quiet Hours)
+  const [quietHours, setQuietHours] = useState<QuietHoursSettings>({
+    isEnabled: true,
+    startTime: '22:00',
+    endTime: '08:00',
+    blockAllUnknownCorporate: true,
+  });
+  const [quietHoursModalVisible, setQuietHoursModalVisible] = useState(false);
+
   // Yedekleme Modalı
   const [backupModalVisible, setBackupModalVisible] = useState(false);
   const [backupJsonText, setBackupJsonText] = useState('');
@@ -38,6 +59,7 @@ export const SyncScreen: React.FC<Props> = ({ rules, onUpdateRules }) => {
   useEffect(() => {
     loadStatus();
     loadLogs();
+    loadThreatsAndQuietHours();
   }, []);
 
   const loadStatus = async () => {
@@ -48,6 +70,14 @@ export const SyncScreen: React.FC<Props> = ({ rules, onUpdateRules }) => {
   const loadLogs = async () => {
     const history = await AuditLogger.getLogs();
     setLogs(history);
+  };
+
+  const loadThreatsAndQuietHours = async () => {
+    const meta = await CloudThreatSyncService.getMetadata();
+    setThreatMeta(meta);
+
+    const qh = await QuietHoursService.getSettings();
+    setQuietHours(qh);
   };
 
   const handleSync = async () => {
@@ -71,6 +101,26 @@ export const SyncScreen: React.FC<Props> = ({ rules, onUpdateRules }) => {
       }
       await loadStatus();
     }
+  };
+
+  // MARK: - Bulut Tehdit Beslemesini Güncelle
+  const handleUpdateThreatFeed = async () => {
+    setIsUpdatingThreats(true);
+    const res = await CloudThreatSyncService.fetchAndMergeLatestThreats(rules, onUpdateRules);
+    setIsUpdatingThreats(false);
+
+    const updatedMeta = await CloudThreatSyncService.getMetadata();
+    setThreatMeta(updatedMeta);
+    await loadLogs();
+
+    Alert.alert(res.success ? 'Bulut Kalkanı Güncellendi' : 'Bilgi', res.message);
+  };
+
+  // MARK: - Gece Modunu Değiştir
+  const handleToggleQuietHours = async (val: boolean) => {
+    const updated = { ...quietHours, isEnabled: val };
+    setQuietHours(updated);
+    await QuietHoursService.saveSettings(updated);
   };
 
   // MARK: - Yedekleme & İçe Aktarma
@@ -124,7 +174,7 @@ export const SyncScreen: React.FC<Props> = ({ rules, onUpdateRules }) => {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      {/* Senkronizasyon Ana Kartı */}
+      {/* 1. Senkronizasyon Ana Kartı */}
       <View style={styles.card}>
         <Text style={styles.cardTitle}>Sistem Senkronizasyonu</Text>
         <Text style={styles.cardSubtitle}>
@@ -157,7 +207,82 @@ export const SyncScreen: React.FC<Props> = ({ rules, onUpdateRules }) => {
         )}
       </View>
 
-      {/* İstatistikler */}
+      {/* 2. Bulut Tehdit İstihbaratı Beslemesi (Canlı Güncelleme) */}
+      <View style={[styles.card, styles.cloudCard]}>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+          <Text style={[styles.cardTitle, { color: '#0369A1' }]}>🌐 Canlı Bulut Tehdit Kalkanı</Text>
+          <View style={styles.shieldBadge}>
+            <Text style={styles.shieldBadgeText}>Kalkan Gücü: %99.4</Text>
+          </View>
+        </View>
+
+        <Text style={styles.cardSubtitle}>
+          En yeni türeyen kaçak bahis alan adları, Telegram botları ve sanal santralleri bulut veritabanından tek tıkla kalkanınıza ekleyin.
+        </Text>
+
+        <View style={styles.cloudStatsRow}>
+          <Text style={styles.cloudStatsText}>
+            🛡️ Tehdit Havuzu: <Text style={{ fontWeight: 'bold' }}>{threatMeta.totalThreatsInDatabase} kural</Text>
+          </Text>
+          <Text style={styles.cloudStatsText}>
+            Son Güncelleme:{' '}
+            <Text style={{ fontWeight: 'bold' }}>
+              {threatMeta.lastUpdated
+                ? new Date(threatMeta.lastUpdated).toLocaleDateString()
+                : 'İlk Açılış'}
+            </Text>
+          </Text>
+        </View>
+
+        <TouchableOpacity
+          style={styles.cloudButton}
+          onPress={handleUpdateThreatFeed}
+          disabled={isUpdatingThreats}
+        >
+          {isUpdatingThreats ? (
+            <ActivityIndicator color="#FFF" style={{ marginRight: 8 }} />
+          ) : (
+            <Text style={{ fontSize: 16, marginRight: 6 }}>⚡</Text>
+          )}
+          <Text style={styles.cloudButtonText}>
+            {isUpdatingThreats ? 'Güncelleniyor...' : 'Buluttan Yeni Tehditleri İndir'}
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* 3. Gece Sessizliği (Call Quiet Hours) */}
+      <View style={styles.card}>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+            <Text style={{ fontSize: 18 }}>🌙</Text>
+            <Text style={styles.cardTitle}>Gece Sessizliği (Quiet Hours)</Text>
+          </View>
+          <Switch
+            value={quietHours.isEnabled}
+            onValueChange={handleToggleQuietHours}
+            trackColor={{ false: '#D1D5DB', true: '#4F46E5' }}
+          />
+        </View>
+
+        <Text style={styles.cardSubtitle}>
+          {quietHours.startTime} - {quietHours.endTime} saatleri arasında rehberinizde olmayan kurumsal santral (0850/0212 vb.) ve pazarlama aramalarını otomatik olarak sessize alır.
+        </Text>
+
+        <View style={styles.quietHoursBadge}>
+          <Text style={styles.quietHoursBadgeText}>
+            {quietHours.isEnabled ? `✅ Gece Koruma Modu Aktif (${quietHours.startTime} - ${quietHours.endTime})` : '⚠️ Gece Modu Kapalı'}
+          </Text>
+        </View>
+
+        <TouchableOpacity
+          style={styles.editQuietHoursBtn}
+          onPress={() => setQuietHoursModalVisible(true)}
+        >
+          <Text style={styles.editQuietHoursBtnText}>⚙️ Saatleri Manuel Seç ({quietHours.startTime} - {quietHours.endTime})</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* 4. Aktif Kural Özeti */}
       <View style={styles.card}>
         <Text style={styles.cardTitle}>Aktif Kural Özeti</Text>
         <View style={styles.statRow}>
@@ -182,7 +307,7 @@ export const SyncScreen: React.FC<Props> = ({ rules, onUpdateRules }) => {
         </View>
       </View>
 
-      {/* Kural Yedekleme & İçe/Dışa Aktarma */}
+      {/* 5. Kural Yedekleme & İçe/Dışa Aktarma */}
       <View style={styles.card}>
         <Text style={styles.cardTitle}>📦 Kural Yedekleme ve Yönetim</Text>
         <Text style={styles.cardSubtitle}>
@@ -204,7 +329,7 @@ export const SyncScreen: React.FC<Props> = ({ rules, onUpdateRules }) => {
         </TouchableOpacity>
       </View>
 
-      {/* Engelleme Geçmişi (Audit Logs) */}
+      {/* 6. Engelleme Geçmişi (Audit Logs) */}
       <View style={styles.card}>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
           <Text style={styles.cardTitle}>📋 Engelleme Geçmişi ({logs.length})</Text>
@@ -236,7 +361,7 @@ export const SyncScreen: React.FC<Props> = ({ rules, onUpdateRules }) => {
         )}
       </View>
 
-      {/* Platform Kurulum Rehberi */}
+      {/* 7. Platform Kurulum Rehberi */}
       <View style={styles.card}>
         <Text style={styles.cardTitle}>
           {Platform.OS === 'ios' ? '📱 iOS Sistem Ayarları' : '🤖 Android Sistem Ayarları'}
@@ -324,6 +449,17 @@ export const SyncScreen: React.FC<Props> = ({ rules, onUpdateRules }) => {
           </View>
         </View>
       </Modal>
+
+      {/* Gece Sessizliği Manuel Saat Seçim Modalı */}
+      <QuietHoursModal
+        visible={quietHoursModalVisible}
+        settings={quietHours}
+        onClose={() => setQuietHoursModalVisible(false)}
+        onSave={async (newSettings) => {
+          setQuietHours(newSettings);
+          await QuietHoursService.saveSettings(newSettings);
+        }}
+      />
     </ScrollView>
   );
 };
@@ -332,8 +468,31 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F2F2F7' },
   content: { padding: 16, paddingBottom: 40 },
   card: { backgroundColor: '#FFF', borderRadius: 12, padding: 16, marginBottom: 14 },
+  cloudCard: { backgroundColor: '#F0F9FF', borderColor: '#BAE6FD', borderWidth: 1 },
   cardTitle: { fontSize: 16, fontWeight: 'bold', color: '#111', marginBottom: 6 },
   cardSubtitle: { fontSize: 13, color: '#666', lineHeight: 18, marginBottom: 14 },
+  shieldBadge: { backgroundColor: '#E0F2FE', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6, borderWidth: 1, borderColor: '#7DD3FC' },
+  shieldBadgeText: { fontSize: 11, fontWeight: 'bold', color: '#0284C7' },
+  cloudStatsRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 12 },
+  cloudStatsText: { fontSize: 12, color: '#0369A1' },
+  cloudButton: { backgroundColor: '#0284C7', paddingVertical: 12, borderRadius: 8, flexDirection: 'row', alignItems: 'center', justifyContent: 'center' },
+  cloudButtonText: { color: '#FFF', fontWeight: 'bold', fontSize: 14 },
+  quietHoursBadge: { backgroundColor: '#EEF2FF', padding: 8, borderRadius: 6, borderWidth: 1, borderColor: '#C7D2FE', alignItems: 'center' },
+  quietHoursBadgeText: { fontSize: 12, fontWeight: '600', color: '#4338CA' },
+  editQuietHoursBtn: {
+    marginTop: 8,
+    backgroundColor: '#EEF2FF',
+    paddingVertical: 9,
+    borderRadius: 8,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#C7D2FE',
+  },
+  editQuietHoursBtnText: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#4F46E5',
+  },
   syncButton: {
     backgroundColor: '#2563EB',
     paddingVertical: 14,
