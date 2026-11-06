@@ -4,10 +4,12 @@
     "slug": "spam-filter",
     "version": "1.0.0",
     "orientation": "portrait",
+    "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "splash": {
+      "image": "./assets/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#0c1021"
     },
     "ios": {
       "bundleIdentifier": "com.app.spamfilter",
@@ -25,7 +27,8 @@
     "android": {
       "package": "com.app.spamfilter",
       "adaptiveIcon": {
-        "backgroundColor": "#ffffff"
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0c1021"
       },
       "permissions": [
         "android.permission.RECEIVE_SMS",
