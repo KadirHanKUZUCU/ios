@@ -1,15 +1,20 @@
-const { withAndroidManifest, withEntitlementsPlist, createRunOncePlugin } = require('@expo/config-plugins');
+const {
+  withAndroidManifest,
+  withEntitlementsPlist,
+  withDangerousMod,
+  withXcodeProject,
+  createRunOncePlugin,
+} = require('@expo/config-plugins');
+const fs = require('fs');
+const path = require('path');
 
-/**
- * Expo Config Plugin: Android İzinleri, CallScreeningService ve SmsReceiver ekler
- * iOS tarafında ise App Groups entitlements tanımlar.
- */
 function withSpamFilterPlugin(config) {
-  // 1. Android Manifest Yapılandırması
+  // ==========================================
+  // 1. ANDROID MANIFEST & KOTLIN DOSYALARI
+  // ==========================================
   config = withAndroidManifest(config, async (config) => {
     const mainApplication = config.modResults.manifest.application[0];
 
-    // İzinler
     const permissions = [
       'android.permission.RECEIVE_SMS',
       'android.permission.READ_PHONE_STATE',
@@ -34,10 +39,10 @@ function withSpamFilterPlugin(config) {
 
     // CallScreeningService Tanımı
     if (!mainApplication.service) mainApplication.service = [];
-    const hasScreeningService = mainApplication.service.some(
+    const hasScreening = mainApplication.service.some(
       (s) => s.$['android:name'] === '.SpamCallScreeningService'
     );
-    if (!hasScreeningService) {
+    if (!hasScreening) {
       mainApplication.service.push({
         $: {
           'android:name': '.SpamCallScreeningService',
@@ -58,10 +63,10 @@ function withSpamFilterPlugin(config) {
 
     // SmsReceiver Tanımı
     if (!mainApplication.receiver) mainApplication.receiver = [];
-    const hasSmsReceiver = mainApplication.receiver.some(
+    const hasReceiver = mainApplication.receiver.some(
       (r) => r.$['android:name'] === '.SpamSmsReceiver'
     );
-    if (!hasSmsReceiver) {
+    if (!hasReceiver) {
       mainApplication.receiver.push({
         $: {
           'android:name': '.SpamSmsReceiver',
@@ -84,7 +89,33 @@ function withSpamFilterPlugin(config) {
     return config;
   });
 
-  // 2. iOS App Groups Entitlements Yapılandırması
+  // Android Kotlin Dosyalarını Hedef Projeye Kopyalama
+  config = withDangerousMod(config, [
+    'android',
+    async (config) => {
+      const androidSrc = path.join(
+        config.modRequest.platformProjectRoot,
+        'app/src/main/java/com/app/spamfilter'
+      );
+      const localAndroidNative = path.join(config.modRequest.projectRoot, 'android-native');
+
+      if (fs.existsSync(localAndroidNative)) {
+        fs.mkdirSync(androidSrc, { recursive: true });
+        const files = fs.readdirSync(localAndroidNative);
+        for (const file of files) {
+          fs.copyFileSync(
+            path.join(localAndroidNative, file),
+            path.join(androidSrc, file)
+          );
+        }
+      }
+      return config;
+    },
+  ]);
+
+  // ==========================================
+  // 2. iOS APP GROUPS & EXTENSION DOSYALARI
+  // ==========================================
   config = withEntitlementsPlist(config, (config) => {
     config.modResults['com.apple.security.application-groups'] = [
       'group.com.app.spamfilter',
@@ -92,8 +123,42 @@ function withSpamFilterPlugin(config) {
     return config;
   });
 
+  // iOS Extension Dosyalarını ios/ Dizinine Kopyalama
+  config = withDangerousMod(config, [
+    'ios',
+    async (config) => {
+      const iosRoot = config.modRequest.platformProjectRoot;
+      const projectRoot = config.modRequest.projectRoot;
+
+      const extensions = ['MessageFilterExtension', 'CallDirectoryExtension'];
+
+      for (const ext of extensions) {
+        const srcExt = path.join(projectRoot, ext);
+        const destExt = path.join(iosRoot, ext);
+
+        if (fs.existsSync(srcExt)) {
+          fs.mkdirSync(destExt, { recursive: true });
+          const files = fs.readdirSync(srcExt);
+          for (const file of files) {
+            fs.copyFileSync(path.join(srcExt, file), path.join(destExt, file));
+          }
+
+          // Shared klasöründeki yardımcıları extension içine de kopyala
+          const sharedDir = path.join(projectRoot, 'SpamFilter/Shared');
+          if (fs.existsSync(sharedDir)) {
+            const sharedFiles = fs.readdirSync(sharedDir);
+            for (const sFile of sharedFiles) {
+              fs.copyFileSync(path.join(sharedDir, sFile), path.join(destExt, sFile));
+            }
+          }
+        }
+      }
+
+      return config;
+    },
+  ]);
+
   return config;
 }
 
 module.exports = createRunOncePlugin(withSpamFilterPlugin, 'withSpamFilter', '1.0.0');
-
