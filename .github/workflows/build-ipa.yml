@@ -7,7 +7,7 @@ on:
 
 jobs:
   build-unsigned-ipa:
-    runs-on: macos-14 # Apple Silicon M1/M2 macOS Runner (Ücretsiz)
+    runs-on: macos-latest # En güncel ve desteklenen Apple Silicon macOS Runner (Ücretsiz)
 
     steps:
       - name: 📥 Depoyu İndir
@@ -57,3 +57,4 @@ jobs:
           name: SpamFilter-IPA
           path: SpamFilter.ipa
           retention-days: 7
+
