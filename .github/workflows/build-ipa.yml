@@ -25,9 +25,14 @@ jobs:
       - name: 📱 Expo Prebuild ile iOS Projesini Oluştur
         run: npx expo prebuild --platform ios --clean
 
+      - name: 💎 Ruby Ortamını Hazırla
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.3'
+
       - name: 🧩 iOS MessageFilter & CallKit Extension Hedeflerini Xcode Projesine Ekle
         run: |
-          sudo gem install xcodeproj --no-document
+          gem install xcodeproj --no-document
           ruby scripts/add_ios_extensions.rb
 
       - name: ☕ CocoaPods Bağımlılıklarını Kur
