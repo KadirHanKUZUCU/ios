@@ -12,21 +12,31 @@ begin
   project = Xcodeproj::Project.open(project_path)
   main_target = project.targets.find { |t| t.name == 'SpamFilter' }
   unless main_target
-    puts "❌ Error: Main target 'SpamFilter' not found"
+    puts "❌ Error: Main target 'SpamFilter' not found. Available targets: #{project.targets.map(&:name).join(', ')}"
     exit 1
   end
 
   # Embed App Extensions phase on main target
-  embed_phase = main_target.copy_files_build_phases.find { |bp| bp.name == 'Embed App Extensions' }
+  embed_phase = main_target.copy_files_build_phases.find { |bp| bp.name == 'Embed App Extensions' || bp.dst_subfolder_spec.to_s == '13' }
   unless embed_phase
     puts "➕ Creating Embed App Extensions copy files build phase..."
     embed_phase = main_target.new_copy_files_build_phase('Embed App Extensions')
-    embed_phase.dst_subfolder_spec = :plug_ins
+    embed_phase.dst_subfolder_spec = '13'
     embed_phase.dst_path = ''
   end
 
   def setup_extension(project, main_target, embed_phase, name, bundle_suffix, framework_name)
     puts "🔨 Setting up #{name}..."
+
+    # Ensure extension files exist in ios/<name>/
+    FileUtils.mkdir_p("ios/#{name}")
+    if Dir.exist?(name)
+      FileUtils.cp_r(Dir.glob("#{name}/*"), "ios/#{name}/")
+    end
+    if Dir.exist?("SpamFilter/Shared")
+      FileUtils.cp_r(Dir.glob("SpamFilter/Shared/*"), "ios/#{name}/")
+    end
+
     target = project.targets.find { |t| t.name == name }
     unless target
       target = project.new_target(:app_extension, name, :ios, '14.0')
@@ -64,7 +74,8 @@ begin
     target.build_configuration_list.set_setting('GENERATE_INFOPLIST_FILE', 'NO')
 
     # Embed in main target PlugIns
-    unless embed_phase.files_references.include?(target.product_reference)
+    already_embedded = embed_phase.files.any? { |bf| bf.file_ref == target.product_reference }
+    unless already_embedded
       build_file = project.new(Xcodeproj::Project::Object::PBXBuildFile)
       build_file.file_ref = target.product_reference
       build_file.settings = { 'ATTRIBUTES' => ['RemoveHeadersOnCopy'] }

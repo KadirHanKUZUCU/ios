@@ -33,7 +33,7 @@ jobs:
       - name: 🧩 iOS MessageFilter & CallKit Extension Hedeflerini Xcode Projesine Ekle
         run: |
           gem install xcodeproj --no-document
-          ruby scripts/add_ios_extensions.rb
+          ruby scripts/add_ios_extensions.rb 2>&1 | tee -a $GITHUB_STEP_SUMMARY
 
       - name: ☕ CocoaPods Bağımlılıklarını Kur
         run: |
