@@ -26,7 +26,9 @@ jobs:
         run: npx expo prebuild --platform ios --clean
 
       - name: 🧩 iOS MessageFilter & CallKit Extension Hedeflerini Xcode Projesine Ekle
-        run: ruby scripts/add_ios_extensions.rb
+        run: |
+          gem install xcodeproj --no-document
+          ruby scripts/add_ios_extensions.rb
 
       - name: ☕ CocoaPods Bağımlılıklarını Kur
         run: |

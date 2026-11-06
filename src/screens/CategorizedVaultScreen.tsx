@@ -5,6 +5,7 @@ import {
   TouchableOpacity,
   TextInput,
   ScrollView,
+  RefreshControl,
   StyleSheet,
   Alert,
 } from 'react-native';
@@ -71,7 +72,13 @@ export const CategorizedVaultScreen: React.FC = () => {
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={styles.content}
+      refreshControl={
+        <RefreshControl refreshing={isRefreshing} onRefresh={loadDashboardData} />
+      }
+    >
       {/* 1. Kalkan Ana Durum Kartı */}
       <View style={styles.shieldCard}>
         <View style={styles.shieldHeader}>

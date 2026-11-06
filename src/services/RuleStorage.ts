@@ -5,7 +5,16 @@ import { FilterRules, DEFAULT_RULES, SyncInfo } from '../types';
 const STORAGE_KEY = '@spam_filter_rules_v1';
 const SYNC_INFO_KEY = '@spam_filter_sync_info';
 
-const { SpamFilterBridge } = NativeModules;
+interface ISpamFilterBridge {
+  saveRulesToSharedStorage?: (json: string) => Promise<any>;
+  syncCallDirectory?: (json: string) => Promise<{ success: boolean; message: string }>;
+  syncAndroidRules?: (json: string) => Promise<{ success: boolean; message: string }>;
+  getCallDirectoryStatus?: () => Promise<string | boolean>;
+  isCallScreeningRoleHeld?: () => Promise<boolean>;
+  requestCallScreeningRole?: () => Promise<boolean>;
+}
+
+const SpamFilterBridge: ISpamFilterBridge | undefined = NativeModules.SpamFilterBridge;
 
 export class RuleStorage {
   /**

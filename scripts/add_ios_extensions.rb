@@ -85,3 +85,4 @@ configure_extension(project, main_target, embed_phase, 'CallDirectoryExtension',
 
 project.save
 puts "🎉 Successfully saved #{project_path} with all extensions linked to PlugIns!"
+

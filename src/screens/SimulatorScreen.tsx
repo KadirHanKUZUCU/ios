@@ -5,6 +5,7 @@ import {
   TextInput,
   TouchableOpacity,
   ScrollView,
+  Platform,
   StyleSheet,
 } from 'react-native';
 import { FilterRules, SpamVerdict } from '../types';
@@ -193,7 +194,11 @@ const styles = StyleSheet.create({
   divider: { height: 1, backgroundColor: '#F3F4F6', marginVertical: 12 },
   normLabel: { fontSize: 12, fontWeight: '600', color: '#4B5563', marginBottom: 4 },
   normBox: { backgroundColor: '#F8FAFC', padding: 10, borderRadius: 8, borderWidth: 1, borderColor: '#E2E8F0' },
-  normText: { fontFamily: 'Courier', fontSize: 12, color: '#1E293B' },
+  normText: {
+    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
+    fontSize: 12,
+    color: '#1E293B',
+  },
   matchedRuleItem: { fontSize: 12, color: '#DC2626', marginTop: 2, fontWeight: '500' },
 });
 

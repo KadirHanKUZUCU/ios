@@ -11,7 +11,6 @@ import { FilterRules, DEFAULT_RULES } from './src/types';
 import { RuleStorage } from './src/services/RuleStorage';
 import { CategorizedVaultScreen } from './src/screens/CategorizedVaultScreen';
 import { KeywordsScreen } from './src/screens/KeywordsScreen';
-import { RegexScreen } from './src/screens/RegexScreen';
 import { PhoneNumbersScreen } from './src/screens/PhoneNumbersScreen';
 import { ReportSpamScreen } from './src/screens/ReportSpamScreen';
 import { SimulatorScreen } from './src/screens/SimulatorScreen';
