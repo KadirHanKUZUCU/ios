@@ -2,7 +2,7 @@ import Foundation
 import IdentityLookup
 import os.log
 
-/// IdentityLookup framework'ü ile gelen SMS'leri filtreleyen sistem extension'ı
+/// IdentityLookup framework'ü ile gelen SMS'leri filtreleyen ve iOS 14+ alt kategorilerine ayıran sistem extension'ı
 final class MessageFilterExtension: ILMessageFilterExtension, ILMessageFilterQueryHandling {
     
     private let logger = Logger(subsystem: "com.app.spamfilter.MessageFilter", category: "SMSFilter")
@@ -33,17 +33,40 @@ final class MessageFilterExtension: ILMessageFilterExtension, ILMessageFilterQue
         // 3. Yanıtı hazırla
         let response = ILMessageFilterQueryResponse()
         
+        // iOS 14 ve üzeri için alt kategori (SubAction) belirleme:
+        // Bu sayede Apple'ın 'Mesajlar' uygulamasında 'İşlemler (Banka)', 'Promosyonlar' ve 'İstenmeyen' sekmelerine ayrılır.
         switch verdict {
         case .junk(let reason):
             logger.notice("SPAM TESPİT EDİLDİ [JUNK] -> Sebep: \(reason, privacy: .public)")
             response.action = .junk
+            if #available(iOS 14.0, *) {
+                response.subAction = .junkOthers
+            }
             
         case .allow(let reason):
-            logger.info("TEMİZ MESAJ [NONE] -> Sebep: \(reason, privacy: .public)")
-            response.action = .none
+            logger.info("TEMİZ MESAJ [NONE/ALLOW] -> Sebep: \(reason, privacy: .public)")
+            
+            // Eğer banka veya işlem mesajıysa iOS'un yerel "İşlemler / Transactions" klasörüne yönlendir
+            if #available(iOS 14.0, *) {
+                let lower = (messageBody ?? "").lowercased()
+                if lower.contains("onay kodu") || lower.contains("sifre") || lower.contains("transfer") || lower.contains("ekstre") {
+                    response.action = .transaction
+                    response.subAction = .transactionalFinance
+                } else if lower.contains("kargo") || lower.contains("teslim") || lower.contains("siparis") {
+                    response.action = .transaction
+                    response.subAction = .transactionalOrders
+                } else if lower.contains("indirim") || lower.contains("firsat") || lower.contains("kampanya") {
+                    response.action = .promotion
+                    response.subAction = .promotionalOffers
+                } else {
+                    response.action = .none
+                    response.subAction = .none
+                }
+            } else {
+                response.action = .none
+            }
         }
         
         completion(response)
     }
 }
-

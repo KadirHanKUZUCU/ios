@@ -9,6 +9,7 @@ import {
 import { StatusBar } from 'expo-status-bar';
 import { FilterRules, DEFAULT_RULES } from './src/types';
 import { RuleStorage } from './src/services/RuleStorage';
+import { CategorizedVaultScreen } from './src/screens/CategorizedVaultScreen';
 import { KeywordsScreen } from './src/screens/KeywordsScreen';
 import { RegexScreen } from './src/screens/RegexScreen';
 import { PhoneNumbersScreen } from './src/screens/PhoneNumbersScreen';
@@ -16,10 +17,10 @@ import { ReportSpamScreen } from './src/screens/ReportSpamScreen';
 import { SimulatorScreen } from './src/screens/SimulatorScreen';
 import { SyncScreen } from './src/screens/SyncScreen';
 
-type Tab = 'keywords' | 'regex' | 'phones' | 'report' | 'simulator' | 'sync';
+type Tab = 'vault' | 'keywords' | 'phones' | 'report' | 'simulator' | 'sync';
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<Tab>('keywords');
+  const [activeTab, setActiveTab] = useState<Tab>('vault');
   const [rules, setRules] = useState<FilterRules>(DEFAULT_RULES);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -43,16 +44,14 @@ export default function App() {
       {/* Üst Başlık */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>🛡️ SpamFilter</Text>
-        <Text style={styles.headerSubtitle}>SMS ve Çağrı Güvenlik Merkezi</Text>
+        <Text style={styles.headerSubtitle}>Akıllı Klasörler & İstenmeyen SMS/Çağrı Kalkanı</Text>
       </View>
 
       {/* Ekran İçeriği */}
       <View style={styles.screenContainer}>
+        {activeTab === 'vault' && <CategorizedVaultScreen />}
         {activeTab === 'keywords' && (
           <KeywordsScreen rules={rules} onUpdateRules={handleUpdateRules} />
-        )}
-        {activeTab === 'regex' && (
-          <RegexScreen rules={rules} onUpdateRules={handleUpdateRules} />
         )}
         {activeTab === 'phones' && (
           <PhoneNumbersScreen rules={rules} onUpdateRules={handleUpdateRules} />
@@ -69,22 +68,22 @@ export default function App() {
       {/* Alt Gezinme Çubuğu (Bottom Navigation) */}
       <View style={styles.bottomBar}>
         <TouchableOpacity
+          style={[styles.navItem, activeTab === 'vault' && styles.activeNavItem]}
+          onPress={() => setActiveTab('vault')}
+        >
+          <Text style={styles.navIcon}>📁</Text>
+          <Text style={[styles.navText, activeTab === 'vault' && styles.activeNavTextBlue]}>
+            Klasörler
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
           style={[styles.navItem, activeTab === 'keywords' && styles.activeNavItem]}
           onPress={() => setActiveTab('keywords')}
         >
           <Text style={styles.navIcon}>💬</Text>
           <Text style={[styles.navText, activeTab === 'keywords' && styles.activeNavText]}>
             Kelimeler
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.navItem, activeTab === 'regex' && styles.activeNavItem]}
-          onPress={() => setActiveTab('regex')}
-        >
-          <Text style={styles.navIcon}>⚙️</Text>
-          <Text style={[styles.navText, activeTab === 'regex' && styles.activeNavText]}>
-            Regex
           </Text>
         </TouchableOpacity>
 
@@ -157,5 +156,6 @@ const styles = StyleSheet.create({
   navIcon: { fontSize: 17, marginBottom: 2 },
   navText: { fontSize: 9, color: '#8E8E93', fontWeight: '500' },
   activeNavText: { color: '#2563EB', fontWeight: '700' },
+  activeNavTextBlue: { color: '#0284C7', fontWeight: '700' },
   activeNavTextRed: { color: '#DC2626', fontWeight: '700' },
 });
