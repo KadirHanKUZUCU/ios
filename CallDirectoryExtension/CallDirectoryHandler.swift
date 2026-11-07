@@ -31,7 +31,7 @@ final class CallDirectoryHandler: CXCallDirectoryProvider {
             
         } catch {
             logger.error("CallDirectoryHandler hata ile karşılaştı: \(error.localizedDescription)")
-            context.cancelRequest(with: error)
+            context.cancelRequest(withError: error)
         }
     }
     
@@ -91,8 +91,8 @@ final class CallDirectoryHandler: CXCallDirectoryProvider {
     ) throws {
         // Artımlı güncellemede basitlik ve veri bütünlüğü adına tüm engellemeleri ve kimlikleri
         // temizleyip güncel listeyi sıfırdan eklemek en kararlı yöntemdir.
-        context.removeAllBlockingPhoneNumbers()
-        context.removeAllIdentificationPhoneNumbers()
+        context.removeAllBlockingEntries()
+        context.removeAllIdentificationEntries()
         
         try addAllBlockingPhoneNumbers(to: context, rules: rules)
         try addAllIdentificationPhoneNumbers(to: context)
