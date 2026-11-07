@@ -54,6 +54,7 @@ jobs:
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO \
+            VALIDATE_PRODUCT=NO \
             build 2>&1 | tee xcodebuild.log || {
               echo "### ❌ Xcode Derleme Hatası" >> $GITHUB_STEP_SUMMARY
               echo '```text' >> $GITHUB_STEP_SUMMARY
