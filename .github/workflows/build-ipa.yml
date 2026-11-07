@@ -55,8 +55,10 @@ jobs:
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO \
             build 2>&1 | tee xcodebuild.log || {
-              echo "❌ Xcode derlemesi başarısız oldu! İşte son 100 satır hata kaydı:"
-              tail -n 100 xcodebuild.log
+              echo "### ❌ Xcode Derleme Hatası" >> $GITHUB_STEP_SUMMARY
+              echo '```text' >> $GITHUB_STEP_SUMMARY
+              grep -E -C 3 "(error:|fatal error:|\*\* BUILD FAILED)" xcodebuild.log | tail -n 50 >> $GITHUB_STEP_SUMMARY || tail -n 50 xcodebuild.log >> $GITHUB_STEP_SUMMARY
+              echo '```' >> $GITHUB_STEP_SUMMARY
               exit 1
             }
 

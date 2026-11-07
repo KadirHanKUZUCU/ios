@@ -39,9 +39,6 @@ final class MessageFilterExtension: ILMessageFilterExtension, ILMessageFilterQue
         case .junk(let reason):
             logger.notice("SPAM TESPİT EDİLDİ [JUNK] -> Sebep: \(reason, privacy: .public)")
             response.action = .junk
-            if #available(iOS 14.0, *) {
-                response.subAction = .junkOthers
-            }
             
         case .allow(let reason):
             logger.info("TEMİZ MESAJ [NONE/ALLOW] -> Sebep: \(reason, privacy: .public)")
@@ -51,16 +48,21 @@ final class MessageFilterExtension: ILMessageFilterExtension, ILMessageFilterQue
                 let lower = (messageBody ?? "").lowercased()
                 if lower.contains("onay kodu") || lower.contains("sifre") || lower.contains("transfer") || lower.contains("ekstre") {
                     response.action = .transaction
-                    response.subAction = .transactionalFinance
+                    if #available(iOS 16.0, *) {
+                        response.subAction = .transactionalFinance
+                    }
                 } else if lower.contains("kargo") || lower.contains("teslim") || lower.contains("siparis") {
                     response.action = .transaction
-                    response.subAction = .transactionalOrders
+                    if #available(iOS 16.0, *) {
+                        response.subAction = .transactionalOrders
+                    }
                 } else if lower.contains("indirim") || lower.contains("firsat") || lower.contains("kampanya") {
                     response.action = .promotion
-                    response.subAction = .promotionalOffers
+                    if #available(iOS 16.0, *) {
+                        response.subAction = .promotionalOffers
+                    }
                 } else {
                     response.action = .none
-                    response.subAction = .none
                 }
             } else {
                 response.action = .none

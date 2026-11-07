@@ -81,7 +81,11 @@ public final class SharedDataManager: @unchecked Sendable {
     
     public func removeBlacklistKeyword(at offsets: IndexSet) {
         var rules = loadRules()
-        rules.blacklistKeywords.remove(atOffsets: offsets)
+        for index in offsets.sorted(by: >) {
+            if rules.blacklistKeywords.indices.contains(index) {
+                rules.blacklistKeywords.remove(at: index)
+            }
+        }
         saveRules(rules)
     }
     
@@ -97,7 +101,11 @@ public final class SharedDataManager: @unchecked Sendable {
     
     public func removeRegexPattern(at offsets: IndexSet) {
         var rules = loadRules()
-        rules.regexPatterns.remove(atOffsets: offsets)
+        for index in offsets.sorted(by: >) {
+            if rules.regexPatterns.indices.contains(index) {
+                rules.regexPatterns.remove(at: index)
+            }
+        }
         saveRules(rules)
     }
     
@@ -111,7 +119,11 @@ public final class SharedDataManager: @unchecked Sendable {
     
     public func removeBlockedPrefix(at offsets: IndexSet) {
         var rules = loadRules()
-        rules.blockedNumberPrefixes.remove(atOffsets: offsets)
+        for index in offsets.sorted(by: >) {
+            if rules.blockedNumberPrefixes.indices.contains(index) {
+                rules.blockedNumberPrefixes.remove(at: index)
+            }
+        }
         saveRules(rules)
     }
     
@@ -125,7 +137,11 @@ public final class SharedDataManager: @unchecked Sendable {
     
     public func removeCustomBlockedNumber(at offsets: IndexSet) {
         var rules = loadRules()
-        rules.customBlockedNumbers.remove(atOffsets: offsets)
+        for index in offsets.sorted(by: >) {
+            if rules.customBlockedNumbers.indices.contains(index) {
+                rules.customBlockedNumbers.remove(at: index)
+            }
+        }
         saveRules(rules)
     }
     
@@ -139,7 +155,11 @@ public final class SharedDataManager: @unchecked Sendable {
     
     public func removeWhitelistKeyword(at offsets: IndexSet) {
         var rules = loadRules()
-        rules.whitelistKeywords.remove(atOffsets: offsets)
+        for index in offsets.sorted(by: >) {
+            if rules.whitelistKeywords.indices.contains(index) {
+                rules.whitelistKeywords.remove(at: index)
+            }
+        }
         saveRules(rules)
     }
     
@@ -168,16 +188,6 @@ public final class SharedDataManager: @unchecked Sendable {
             cleaned = "9" + cleaned
         }
         return cleaned
-    }
-}
-
-// MARK: - Array IndexSet Extension
-extension Array {
-    public mutating func remove(atOffsets offsets: IndexSet) {
-        for index in offsets.sorted(by: >) {
-            guard indices.contains(index) else { continue }
-            remove(at: index)
-        }
     }
 }
 
