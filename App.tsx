@@ -10,13 +10,11 @@ import { StatusBar } from 'expo-status-bar';
 import { FilterRules, DEFAULT_RULES } from './src/types';
 import { RuleStorage } from './src/services/RuleStorage';
 import { CategorizedVaultScreen } from './src/screens/CategorizedVaultScreen';
-import { KeywordsScreen } from './src/screens/KeywordsScreen';
-import { PhoneNumbersScreen } from './src/screens/PhoneNumbersScreen';
-import { ReportSpamScreen } from './src/screens/ReportSpamScreen';
+import { RulesScreen } from './src/screens/RulesScreen';
 import { SimulatorScreen } from './src/screens/SimulatorScreen';
 import { SyncScreen } from './src/screens/SyncScreen';
 
-type Tab = 'vault' | 'keywords' | 'phones' | 'report' | 'simulator' | 'sync';
+type Tab = 'vault' | 'rules' | 'simulator' | 'sync';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<Tab>('vault');
@@ -38,25 +36,25 @@ export default function App() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar style="dark" />
+      <StatusBar style="light" />
 
-      {/* Üst Başlık */}
+      {/* Modern Cyber Obsidian Header */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>🛡️ SpamFilter</Text>
-        <Text style={styles.headerSubtitle}>Akıllı Klasörler & İstenmeyen SMS/Çağrı Kalkanı</Text>
+        <View style={styles.headerLeft}>
+          <Text style={styles.logoBadge}>🛡️ SPAMFILTER</Text>
+          <Text style={styles.headerSubtitle}>Siber Kalkan & İstenmeyen İleti Filtresi</Text>
+        </View>
+        <View style={styles.statusPill}>
+          <View style={styles.liveDot} />
+          <Text style={styles.liveText}>AKTİF</Text>
+        </View>
       </View>
 
-      {/* Ekran İçeriği */}
+      {/* Screen Content */}
       <View style={styles.screenContainer}>
         {activeTab === 'vault' && <CategorizedVaultScreen />}
-        {activeTab === 'keywords' && (
-          <KeywordsScreen rules={rules} onUpdateRules={handleUpdateRules} />
-        )}
-        {activeTab === 'phones' && (
-          <PhoneNumbersScreen rules={rules} onUpdateRules={handleUpdateRules} />
-        )}
-        {activeTab === 'report' && (
-          <ReportSpamScreen rules={rules} onUpdateRules={handleUpdateRules} />
+        {activeTab === 'rules' && (
+          <RulesScreen rules={rules} onUpdateRules={handleUpdateRules} />
         )}
         {activeTab === 'simulator' && <SimulatorScreen rules={rules} />}
         {activeTab === 'sync' && (
@@ -64,45 +62,25 @@ export default function App() {
         )}
       </View>
 
-      {/* Alt Gezinme Çubuğu (Bottom Navigation) */}
+      {/* Ultra-Modern iOS Cyber Bottom Bar */}
       <View style={styles.bottomBar}>
         <TouchableOpacity
           style={[styles.navItem, activeTab === 'vault' && styles.activeNavItem]}
           onPress={() => setActiveTab('vault')}
         >
           <Text style={styles.navIcon}>🛡️</Text>
-          <Text style={[styles.navText, activeTab === 'vault' && styles.activeNavTextBlue]}>
+          <Text style={[styles.navText, activeTab === 'vault' && styles.activeNavTextEmerald]}>
             Kalkan
           </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.navItem, activeTab === 'keywords' && styles.activeNavItem]}
-          onPress={() => setActiveTab('keywords')}
+          style={[styles.navItem, activeTab === 'rules' && styles.activeNavItem]}
+          onPress={() => setActiveTab('rules')}
         >
-          <Text style={styles.navIcon}>💬</Text>
-          <Text style={[styles.navText, activeTab === 'keywords' && styles.activeNavText]}>
-            Kelimeler
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.navItem, activeTab === 'phones' && styles.activeNavItem]}
-          onPress={() => setActiveTab('phones')}
-        >
-          <Text style={styles.navIcon}>📞</Text>
-          <Text style={[styles.navText, activeTab === 'phones' && styles.activeNavText]}>
-            Numaralar
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.navItem, activeTab === 'report' && styles.activeNavItem]}
-          onPress={() => setActiveTab('report')}
-        >
-          <Text style={styles.navIcon}>🚨</Text>
-          <Text style={[styles.navText, activeTab === 'report' && styles.activeNavTextRed]}>
-            Spam Bildir
+          <Text style={styles.navIcon}>⚡</Text>
+          <Text style={[styles.navText, activeTab === 'rules' && styles.activeNavTextCyan]}>
+            Kurallar
           </Text>
         </TouchableOpacity>
 
@@ -110,9 +88,9 @@ export default function App() {
           style={[styles.navItem, activeTab === 'simulator' && styles.activeNavItem]}
           onPress={() => setActiveTab('simulator')}
         >
-          <Text style={styles.navIcon}>🧪</Text>
-          <Text style={[styles.navText, activeTab === 'simulator' && styles.activeNavText]}>
-            Test Lab
+          <Text style={styles.navIcon}>🔬</Text>
+          <Text style={[styles.navText, activeTab === 'simulator' && styles.activeNavTextCyan]}>
+            Canlı Test
           </Text>
         </TouchableOpacity>
 
@@ -120,9 +98,9 @@ export default function App() {
           style={[styles.navItem, activeTab === 'sync' && styles.activeNavItem]}
           onPress={() => setActiveTab('sync')}
         >
-          <Text style={styles.navIcon}>🔄</Text>
-          <Text style={[styles.navText, activeTab === 'sync' && styles.activeNavText]}>
-            Senkron
+          <Text style={styles.navIcon}>⚙️</Text>
+          <Text style={[styles.navText, activeTab === 'sync' && styles.activeNavTextEmerald]}>
+            Kurulum
           </Text>
         </TouchableOpacity>
       </View>
@@ -131,30 +109,71 @@ export default function App() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#FFF' },
+  container: { flex: 1, backgroundColor: '#090D16' },
   header: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 18,
+    paddingTop: 10,
+    paddingBottom: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E5EA',
-    backgroundColor: '#FFF',
+    borderBottomColor: '#162035',
+    backgroundColor: '#090D16',
   },
-  headerTitle: { fontSize: 20, fontWeight: '800', color: '#111' },
-  headerSubtitle: { fontSize: 12, color: '#666', marginTop: 2 },
-  screenContainer: { flex: 1, backgroundColor: '#F2F2F7' },
+  headerLeft: { flex: 1 },
+  logoBadge: {
+    fontSize: 18,
+    fontWeight: '900',
+    color: '#FFF',
+    letterSpacing: 0.5,
+  },
+  headerSubtitle: {
+    fontSize: 11,
+    color: '#94A3B8',
+    marginTop: 2,
+    fontWeight: '500',
+  },
+  statusPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(16, 185, 129, 0.15)',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(16, 185, 129, 0.3)',
+  },
+  liveDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 4,
+    backgroundColor: '#10B981',
+    marginRight: 6,
+  },
+  liveText: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: '#10B981',
+    letterSpacing: 0.5,
+  },
+  screenContainer: { flex: 1, backgroundColor: '#090D16' },
   bottomBar: {
     flexDirection: 'row',
     borderTopWidth: 1,
-    borderTopColor: '#E5E5EA',
-    backgroundColor: '#FFF',
-    paddingVertical: 8,
+    borderTopColor: '#162035',
+    backgroundColor: '#0C1220',
+    paddingVertical: 10,
     paddingBottom: 16,
   },
-  navItem: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  navItem: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   activeNavItem: {},
-  navIcon: { fontSize: 17, marginBottom: 2 },
-  navText: { fontSize: 9, color: '#8E8E93', fontWeight: '500' },
-  activeNavText: { color: '#2563EB', fontWeight: '700' },
-  activeNavTextBlue: { color: '#0284C7', fontWeight: '700' },
-  activeNavTextRed: { color: '#DC2626', fontWeight: '700' },
+  navIcon: { fontSize: 18, marginBottom: 3 },
+  navText: { fontSize: 10, color: '#64748B', fontWeight: '600' },
+  activeNavTextEmerald: { color: '#10B981', fontWeight: '800' },
+  activeNavTextCyan: { color: '#38BDF8', fontWeight: '800' },
 });

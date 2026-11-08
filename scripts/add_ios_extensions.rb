@@ -78,6 +78,7 @@ begin
     ext_bundle_id = "#{main_bundle_id}.#{bundle_suffix}"
     puts "   Bundle ID: #{ext_bundle_id}"
     target.build_configuration_list.set_setting('PRODUCT_NAME', name)
+    target.build_configuration_list.set_setting('PRODUCT_MODULE_NAME', name)
     target.build_configuration_list.set_setting('PRODUCT_BUNDLE_IDENTIFIER', ext_bundle_id)
     target.build_configuration_list.set_setting('INFOPLIST_FILE', "#{name}/Info.plist")
     target.build_configuration_list.set_setting('SWIFT_VERSION', '5.0')

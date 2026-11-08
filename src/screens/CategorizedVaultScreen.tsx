@@ -8,6 +8,7 @@ import {
   RefreshControl,
   StyleSheet,
   Alert,
+  Switch,
 } from 'react-native';
 import { BCodeDirectory, BCodeInfo } from '../services/BCodeDirectory';
 import { AuditLogger, AuditLogEntry } from '../services/AuditLogger';
@@ -20,6 +21,12 @@ export const CategorizedVaultScreen: React.FC = () => {
   const [bCodeResult, setBCodeResult] = useState<BCodeInfo | null>(null);
   const [recentLogs, setRecentLogs] = useState<AuditLogEntry[]>([]);
   const [isRefreshing, setIsRefreshing] = useState(false);
+
+  // Canlı Savunma Anahtarları
+  const [bettingShield, setBettingShield] = useState(true);
+  const [shortLinkShield, setShortLinkShield] = useState(true);
+  const [voipCallShield, setVoipCallShield] = useState(true);
+  const [nightMode, setNightMode] = useState(true);
 
   useEffect(() => {
     loadDashboardData();
@@ -52,7 +59,7 @@ export const CategorizedVaultScreen: React.FC = () => {
     } else {
       Alert.alert(
         'Kod Bulunamadı',
-        `${trimmed} kodu resmi BTK rehberinde kayıtlı değil veya yasa dışı yurt dışı iletimi olabilir.`
+        `${trimmed} kodu resmi BTK rehberinde kayıtlı değil veya yurt dışı yasa dışı SMS iletimi olabilir.`
       );
       setBCodeResult(null);
     }
@@ -61,13 +68,13 @@ export const CategorizedVaultScreen: React.FC = () => {
   const getThreatBadge = (category: string) => {
     switch (category) {
       case 'MAJOR_CARRIER':
-        return { text: 'GÜVENLİ (Resmi Ana Operatör)', color: '#2ecc71', bg: '#e8f8f0' };
+        return { text: 'GÜVENLİ (Resmi Ana Operatör)', color: '#10B981', bg: 'rgba(16, 185, 129, 0.15)' };
       case 'CORPORATE_SMS':
-        return { text: 'KURUMSAL / SANAL OPERATÖR', color: '#3498db', bg: '#ebf5fb' };
+        return { text: 'KURUMSAL / SANAL OPERATÖR', color: '#06B6D4', bg: 'rgba(6, 182, 212, 0.15)' };
       case 'HIGH_RISK_SPAM':
-        return { text: 'YÜKSEK RİSK (Bahis/Spam Raporlu)', color: '#e74c3c', bg: '#fdedec' };
+        return { text: 'YÜKSEK RİSK (Bahis/Spam Kayıtlı)', color: '#EF4444', bg: 'rgba(239, 68, 68, 0.15)' };
       default:
-        return { text: 'BİLİNMEYEN OPERATÖR', color: '#95a5a6', bg: '#f2f4f4' };
+        return { text: 'BİLİNMEYEN OPERATÖR', color: '#94A3B8', bg: 'rgba(148, 163, 184, 0.15)' };
     }
   };
 
@@ -76,72 +83,129 @@ export const CategorizedVaultScreen: React.FC = () => {
       style={styles.container}
       contentContainerStyle={styles.content}
       refreshControl={
-        <RefreshControl refreshing={isRefreshing} onRefresh={loadDashboardData} />
+        <RefreshControl refreshing={isRefreshing} onRefresh={loadDashboardData} tintColor="#10B981" />
       }
     >
-      {/* 1. Kalkan Ana Durum Kartı */}
-      <View style={styles.shieldCard}>
-        <View style={styles.shieldHeader}>
-          <Text style={styles.shieldIcon}>🛡️</Text>
-          <View style={{ flex: 1 }}>
-            <View style={styles.statusPill}>
-              <View style={styles.greenDot} />
-              <Text style={styles.statusPillText}>KALKAN DEVREDE</Text>
-            </View>
-            <Text style={styles.shieldTitle}>Sistem Koruması Aktif</Text>
-            <Text style={styles.shieldSubtitle}>
-              iOS Mesajlar (IdentityLookup) ve Telefon (CallKit) koruma motoru aktif olarak çalışıyor.
-            </Text>
-          </View>
+      {/* 1. HERO SİBER KALKAN KARTI */}
+      <View style={styles.heroCard}>
+        <View style={styles.heroHeader}>
+          <View style={styles.pulseDot} />
+          <Text style={styles.heroStatusText}>SİBER KALKAN DEVREDE • TAM KORUMA</Text>
         </View>
-      </View>
-
-      {/* 2. Aktif Güvenlik İstatistikleri */}
-      <Text style={styles.sectionHeader}>📊 Aktif Koruma Özeti</Text>
-      <View style={styles.statsGrid}>
-        <View style={styles.statBox}>
-          <Text style={styles.statNumber}>{rules.blacklistKeywords.length}</Text>
-          <Text style={styles.statLabel}>Kara Liste Kelimesi</Text>
-          <Text style={styles.statSub}>Bahis, Casino, vb.</Text>
-        </View>
-
-        <View style={styles.statBox}>
-          <Text style={styles.statNumber}>{rules.whitelistKeywords.length}</Text>
-          <Text style={styles.statLabel}>Güvenli Şablon</Text>
-          <Text style={styles.statSub}>Banka OTP, Kargo</Text>
-        </View>
-
-        <View style={styles.statBox}>
-          <Text style={styles.statNumber}>{rules.blockedNumberPrefixes.length}</Text>
-          <Text style={styles.statLabel}>Numara Ön Eki</Text>
-          <Text style={styles.statSub}>+850, +90375 vb.</Text>
-        </View>
-
-        <View style={styles.statBox}>
-          <Text style={styles.statNumber}>273</Text>
-          <Text style={styles.statLabel}>BTK Operatör Kodu</Text>
-          <Text style={styles.statSub}>B001 - B273 Kayıtlı</Text>
-        </View>
-      </View>
-
-      {/* 3. BTK B-Kodu Hızlı Sorgulama */}
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>🔍 BTK Operatör B-Kodu Doğrulama</Text>
-        <Text style={styles.cardDesc}>
-          Gelen SMS'lerin en sonundaki "B001", "B002", "B214" gibi kodları sorgulayıp mesajın hangi operatörden çıktığını öğrenin.
+        <Text style={styles.heroTitle}>Cihaz Düzeyi Akıllı Filtre</Text>
+        <Text style={styles.heroDesc}>
+          Gelen tüm SMS ve çağrılar Apple IdentityLookup ve CallKit motoru ile arka planda filtreleniyor. Kişisel verileriniz cihazınızdan asla ayrılmaz.
         </Text>
+      </View>
 
+      {/* 2. SAVUNMA METRİK KARTLARI */}
+      <Text style={styles.sectionTitle}>AKTİF KORUMA PARAMETRELERİ</Text>
+      <View style={styles.metricsGrid}>
+        <View style={styles.metricCard}>
+          <Text style={styles.metricIcon}>🚫</Text>
+          <Text style={[styles.metricValue, { color: '#EF4444' }]}>{rules.blacklistKeywords.length}</Text>
+          <Text style={styles.metricLabel}>Kara Liste Kelime</Text>
+        </View>
+
+        <View style={styles.metricCard}>
+          <Text style={styles.metricIcon}>📞</Text>
+          <Text style={[styles.metricValue, { color: '#F59E0B' }]}>{rules.blockedNumberPrefixes.length}</Text>
+          <Text style={styles.metricLabel}>Engelli Ön Ek</Text>
+        </View>
+
+        <View style={styles.metricCard}>
+          <Text style={styles.metricIcon}>🔍</Text>
+          <Text style={[styles.metricValue, { color: '#06B6D4' }]}>273</Text>
+          <Text style={styles.metricLabel}>BTK Operatör Verisi</Text>
+        </View>
+
+        <View style={styles.metricCard}>
+          <Text style={styles.metricIcon}>🛡️</Text>
+          <Text style={[styles.metricValue, { color: '#10B981' }]}>{rules.whitelistKeywords.length}</Text>
+          <Text style={styles.metricLabel}>Güvenli Whitelist</Text>
+        </View>
+      </View>
+
+      {/* 3. CANLI KORUMA ANAHTARLARI */}
+      <Text style={styles.sectionTitle}>GÜVENLİK MODÜLLERİ</Text>
+      <View style={styles.switchesCard}>
+        <View style={styles.switchRow}>
+          <View style={styles.switchInfo}>
+            <Text style={styles.switchTitle}>🎰 Yasadışı Bahis & Slot Engelleyici</Text>
+            <Text style={styles.switchSub}>Freespin, nakit bakiye, casino kelimelerini engeller</Text>
+          </View>
+          <Switch
+            value={bettingShield}
+            onValueChange={setBettingShield}
+            trackColor={{ false: '#334155', true: '#10B981' }}
+            thumbColor="#FFF"
+          />
+        </View>
+
+        <View style={styles.divider} />
+
+        <View style={styles.switchRow}>
+          <View style={styles.switchInfo}>
+            <Text style={styles.switchTitle}>🔗 Kısa Link & Oltalama Filtresi</Text>
+            <Text style={styles.switchSub}>bit.ly, t.ly, t.me şüpheli yönlendirmeleri süzer</Text>
+          </View>
+          <Switch
+            value={shortLinkShield}
+            onValueChange={setShortLinkShield}
+            trackColor={{ false: '#334155', true: '#10B981' }}
+            thumbColor="#FFF"
+          />
+        </View>
+
+        <View style={styles.divider} />
+
+        <View style={styles.switchRow}>
+          <View style={styles.switchInfo}>
+            <Text style={styles.switchTitle}>📞 Sanal Santral & Robot Arama Kalkanı</Text>
+            <Text style={styles.switchSub}>+90375, +90850 otomatik IVR aramalarını engeller</Text>
+          </View>
+          <Switch
+            value={voipCallShield}
+            onValueChange={setVoipCallShield}
+            trackColor={{ false: '#334155', true: '#10B981' }}
+            thumbColor="#FFF"
+          />
+        </View>
+
+        <View style={styles.divider} />
+
+        <View style={styles.switchRow}>
+          <View style={styles.switchInfo}>
+            <Text style={styles.switchTitle}>🌙 Gece Rahatsız Etme Kalkanı (00:00 - 08:00)</Text>
+            <Text style={styles.switchSub}>Gece gelen ticari SMS ve aramaları sessize alır</Text>
+          </View>
+          <Switch
+            value={nightMode}
+            onValueChange={setNightMode}
+            trackColor={{ false: '#334155', true: '#10B981' }}
+            thumbColor="#FFF"
+          />
+        </View>
+      </View>
+
+      {/* 4. BTK B-KODU SORGULAMA KARTI */}
+      <Text style={styles.sectionTitle}>BTK RESMİ SMS OPERATÖR SORGULAYICI</Text>
+      <View style={styles.bCodeCard}>
+        <Text style={styles.bCodeDesc}>
+          SMS sonunda yer alan B-kodunu girin (Örn: B001, B002, B214, B250). Operatörün resmi kayıt ve risk durumunu görün.
+        </Text>
         <View style={styles.searchRow}>
           <TextInput
             style={styles.searchInput}
-            placeholder="Örn: B001, B002, B214..."
-            placeholderTextColor="#999"
+            placeholder="Örn: B214 veya B001"
+            placeholderTextColor="#64748B"
             value={bCodeQuery}
             onChangeText={setBCodeQuery}
             autoCapitalize="characters"
+            maxLength={4}
           />
-          <TouchableOpacity style={styles.searchButton} onPress={handleSearchBCode}>
-            <Text style={styles.searchButtonText}>Sorgula</Text>
+          <TouchableOpacity style={styles.searchBtn} onPress={handleSearchBCode}>
+            <Text style={styles.searchBtnText}>Sorgula</Text>
           </TouchableOpacity>
         </View>
 
@@ -151,13 +215,13 @@ export const CategorizedVaultScreen: React.FC = () => {
               <Text style={styles.resultCode}>{bCodeResult.code}</Text>
               <View
                 style={[
-                  styles.threatBadge,
+                  styles.badge,
                   { backgroundColor: getThreatBadge(bCodeResult.category).bg },
                 ]}
               >
                 <Text
                   style={[
-                    styles.threatBadgeText,
+                    styles.badgeText,
                     { color: getThreatBadge(bCodeResult.category).color },
                   ]}
                 >
@@ -165,51 +229,32 @@ export const CategorizedVaultScreen: React.FC = () => {
                 </Text>
               </View>
             </View>
-
             <Text style={styles.resultOperator}>{bCodeResult.operatorName}</Text>
-            <Text style={styles.resultDesc}>{bCodeResult.description}</Text>
+            <Text style={styles.resultDetails}>{bCodeResult.description}</Text>
           </View>
         )}
       </View>
 
-      {/* 4. Son Güvenlik & Denetim Aktivitesi */}
-      <View style={styles.card}>
-        <View style={styles.cardHeaderRow}>
-          <Text style={styles.cardTitle}>📜 Son Güvenlik Aktiviteleri</Text>
-          <TouchableOpacity onPress={loadDashboardData}>
-            <Text style={styles.refreshLink}>Yenile</Text>
-          </TouchableOpacity>
-        </View>
-
+      {/* 5. GÜVENLİK VE ENGELLEME DENETİM GÜNLÜĞÜ */}
+      <Text style={styles.sectionTitle}>SON ENGELLEME DENETİM KAYITLARI</Text>
+      <View style={styles.logsCard}>
         {recentLogs.length === 0 ? (
-          <View style={styles.emptyLogs}>
+          <View style={styles.emptyLogBox}>
             <Text style={styles.emptyIcon}>🛡️</Text>
-            <Text style={styles.emptyTitle}>Sistem Güvende</Text>
-            <Text style={styles.emptyDesc}>
-              Kalkanınız tüm gelen mesajları arka planda otomatik denetliyor.
-              Şüpheli bir mesaj test ettiğinizde veya kural değiştirdiğinizde kayıtlar burada görünür.
+            <Text style={styles.emptyTitle}>Henüz Şüpheli Tehdit Kaydedilmedi</Text>
+            <Text style={styles.emptySubtitle}>
+              Kalkanınız nöbette. Engellenen SMS ve çağrılar otomatik olarak burada listelenecektir.
             </Text>
           </View>
         ) : (
           recentLogs.map((log) => (
             <View key={log.id} style={styles.logItem}>
-              <View style={styles.logTop}>
-                <Text
-                  style={[
-                    styles.logActionBadge,
-                    log.action.includes('ENGEL') ? styles.logBlocked : styles.logUpdated,
-                  ]}
-                >
-                  {log.action}
-                </Text>
-                <Text style={styles.logDate}>
-                  {new Date(log.timestamp).toLocaleTimeString('tr-TR', {
-                    hour: '2-digit',
-                    minute: '2-digit',
-                  })}
-                </Text>
+              <View style={styles.logLeft}>
+                <Text style={styles.logType}>{log.type === 'SMS' ? '💬 SMS' : '📞 ÇAĞRI'}</Text>
+                <Text style={styles.logSender}>{log.senderOrNumber}</Text>
+                <Text style={styles.logReason}>{log.reason}</Text>
               </View>
-              <Text style={styles.logDetails}>{log.senderOrNumber}: {log.reason}</Text>
+              <Text style={styles.logTime}>{new Date(log.timestamp).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}</Text>
             </View>
           ))
         )}
@@ -219,253 +264,139 @@ export const CategorizedVaultScreen: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f6f8fb',
-  },
-  content: {
-    padding: 16,
-    paddingBottom: 32,
-  },
-  shieldCard: {
-    backgroundColor: '#0c1021',
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOpacity: 0.15,
-    shadowRadius: 10,
-    elevation: 4,
-  },
-  shieldHeader: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-  },
-  shieldIcon: {
-    fontSize: 42,
-    marginRight: 16,
-  },
-  statusPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(46, 204, 113, 0.2)',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
+  container: { flex: 1, backgroundColor: '#090D16' },
+  content: { padding: 16, paddingBottom: 40 },
+  heroCard: {
+    backgroundColor: '#121B2E',
     borderRadius: 20,
-    alignSelf: 'flex-start',
-    marginBottom: 8,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: '#1E2D4A',
+    marginBottom: 20,
   },
-  greenDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#2ecc71',
-    marginRight: 6,
+  heroHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 10 },
+  pulseDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: '#10B981',
+    marginRight: 8,
   },
-  statusPillText: {
-    color: '#2ecc71',
-    fontSize: 12,
-    fontWeight: '700',
-    letterSpacing: 0.5,
+  heroStatusText: {
+    color: '#10B981',
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 0.8,
   },
-  shieldTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#ffffff',
-    marginBottom: 4,
-  },
-  shieldSubtitle: {
-    fontSize: 13,
-    color: '#b0b8c9',
-    lineHeight: 18,
-  },
-  sectionHeader: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#2c3e50',
+  heroTitle: { fontSize: 22, fontWeight: '800', color: '#FFF', marginBottom: 8 },
+  heroDesc: { fontSize: 13, color: '#94A3B8', lineHeight: 19 },
+  sectionTitle: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#64748B',
+    letterSpacing: 1,
     marginBottom: 10,
+    marginTop: 6,
+    marginLeft: 4,
   },
-  statsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
-    marginBottom: 16,
-  },
-  statBox: {
+  metricsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 20 },
+  metricCard: {
     flex: 1,
     minWidth: '45%',
-    backgroundColor: '#ffffff',
-    borderRadius: 12,
-    padding: 14,
-    borderWidth: 1,
-    borderColor: '#e8edf3',
-  },
-  statNumber: {
-    fontSize: 24,
-    fontWeight: '800',
-    color: '#1a365d',
-    marginBottom: 2,
-  },
-  statLabel: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#2d3748',
-  },
-  statSub: {
-    fontSize: 11,
-    color: '#718096',
-    marginTop: 2,
-  },
-  card: {
-    backgroundColor: '#ffffff',
-    borderRadius: 14,
+    backgroundColor: '#121B2E',
+    borderRadius: 16,
     padding: 16,
-    marginBottom: 16,
     borderWidth: 1,
-    borderColor: '#e8edf3',
-  },
-  cardHeaderRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    borderColor: '#1E2D4A',
     alignItems: 'center',
-    marginBottom: 12,
   },
-  cardTitle: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#1a202c',
-    marginBottom: 4,
+  metricIcon: { fontSize: 24, marginBottom: 6 },
+  metricValue: { fontSize: 26, fontWeight: '800', marginBottom: 4 },
+  metricLabel: { fontSize: 11, color: '#94A3B8', fontWeight: '600' },
+  switchesCard: {
+    backgroundColor: '#121B2E',
+    borderRadius: 20,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#1E2D4A',
+    marginBottom: 20,
   },
-  cardDesc: {
-    fontSize: 12,
-    color: '#718096',
-    lineHeight: 16,
-    marginBottom: 12,
-  },
-  searchRow: {
+  switchRow: {
     flexDirection: 'row',
-    gap: 8,
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 10,
   },
+  switchInfo: { flex: 1, paddingRight: 12 },
+  switchTitle: { fontSize: 14, fontWeight: '700', color: '#F1F5F9', marginBottom: 2 },
+  switchSub: { fontSize: 11, color: '#64748B', lineHeight: 16 },
+  divider: { height: 1, backgroundColor: '#1E293B', marginVertical: 4 },
+  bCodeCard: {
+    backgroundColor: '#121B2E',
+    borderRadius: 20,
+    padding: 18,
+    borderWidth: 1,
+    borderColor: '#1E2D4A',
+    marginBottom: 20,
+  },
+  bCodeDesc: { fontSize: 12, color: '#94A3B8', marginBottom: 14, lineHeight: 18 },
+  searchRow: { flexDirection: 'row', gap: 10 },
   searchInput: {
     flex: 1,
-    backgroundColor: '#f7fafc',
+    backgroundColor: '#0A0F1D',
+    borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontSize: 14,
-    color: '#2d3748',
-    fontWeight: '600',
-  },
-  searchButton: {
-    backgroundColor: '#2b6cb0',
+    borderColor: '#1E2D4A',
+    color: '#FFF',
     paddingHorizontal: 16,
-    borderRadius: 8,
+    paddingVertical: 12,
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  searchBtn: {
+    backgroundColor: '#10B981',
+    borderRadius: 12,
+    paddingHorizontal: 20,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  searchButtonText: {
-    color: '#ffffff',
-    fontWeight: '700',
-    fontSize: 14,
-  },
+  searchBtnText: { color: '#090D16', fontWeight: '800', fontSize: 14 },
   resultBox: {
-    marginTop: 12,
-    backgroundColor: '#f8fafc',
+    marginTop: 16,
+    backgroundColor: '#0A0F1D',
+    borderRadius: 14,
+    padding: 14,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
-    borderRadius: 10,
-    padding: 12,
+    borderColor: '#1E2D4A',
   },
-  resultHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 6,
+  resultHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 },
+  resultCode: { fontSize: 18, fontWeight: '800', color: '#38BDF8' },
+  badge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 },
+  badgeText: { fontSize: 10, fontWeight: '700' },
+  resultOperator: { fontSize: 14, fontWeight: '700', color: '#F1F5F9', marginBottom: 4 },
+  resultDetails: { fontSize: 12, color: '#94A3B8', lineHeight: 17 },
+  logsCard: {
+    backgroundColor: '#121B2E',
+    borderRadius: 20,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#1E2D4A',
+    marginBottom: 20,
   },
-  resultCode: {
-    fontSize: 16,
-    fontWeight: '800',
-    color: '#2b6cb0',
-  },
-  threatBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
-  },
-  threatBadgeText: {
-    fontSize: 11,
-    fontWeight: '700',
-  },
-  resultOperator: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#2d3748',
-    marginBottom: 4,
-  },
-  resultDesc: {
-    fontSize: 12,
-    color: '#4a5568',
-    lineHeight: 16,
-  },
-  refreshLink: {
-    fontSize: 13,
-    color: '#2b6cb0',
-    fontWeight: '600',
-  },
-  emptyLogs: {
-    alignItems: 'center',
-    paddingVertical: 20,
-  },
-  emptyIcon: {
-    fontSize: 32,
-    marginBottom: 8,
-  },
-  emptyTitle: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#2d3748',
-    marginBottom: 4,
-  },
-  emptyDesc: {
-    fontSize: 12,
-    color: '#718096',
-    textAlign: 'center',
-    lineHeight: 17,
-    paddingHorizontal: 20,
-  },
+  emptyLogBox: { alignItems: 'center', paddingVertical: 24 },
+  emptyIcon: { fontSize: 36, marginBottom: 8 },
+  emptyTitle: { fontSize: 15, fontWeight: '700', color: '#F1F5F9', marginBottom: 4 },
+  emptySubtitle: { fontSize: 12, color: '#64748B', textAlign: 'center', paddingHorizontal: 16 },
   logItem: {
-    borderBottomWidth: 1,
-    borderBottomColor: '#edf2f7',
-    paddingVertical: 10,
-  },
-  logTop: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 4,
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#1E293B',
   },
-  logActionBadge: {
-    fontSize: 11,
-    fontWeight: '700',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
-  },
-  logBlocked: {
-    backgroundColor: '#fed7d7',
-    color: '#c53030',
-  },
-  logUpdated: {
-    backgroundColor: '#bee3f8',
-    color: '#2b6cb0',
-  },
-  logDate: {
-    fontSize: 11,
-    color: '#a0aec0',
-  },
-  logDetails: {
-    fontSize: 12,
-    color: '#4a5568',
-  },
+  logLeft: { flex: 1 },
+  logType: { fontSize: 10, fontWeight: '800', color: '#EF4444', marginBottom: 2 },
+  logSender: { fontSize: 14, fontWeight: '700', color: '#F1F5F9' },
+  logReason: { fontSize: 11, color: '#94A3B8', marginTop: 2 },
+  logTime: { fontSize: 11, color: '#64748B', fontWeight: '600' },
 });

@@ -3,6 +3,7 @@ import CallKit
 import os.log
 
 /// CallKit framework'ü ile gelen çağrıları engelleyen ve tanımlayan extension sağlayıcısı
+@objc(CallDirectoryHandler)
 final class CallDirectoryHandler: CXCallDirectoryProvider {
     
     private let logger = Logger(subsystem: "com.app.spamfilter.CallDirectory", category: "CallProvider")

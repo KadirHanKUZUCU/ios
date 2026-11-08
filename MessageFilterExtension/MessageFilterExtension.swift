@@ -3,6 +3,7 @@ import IdentityLookup
 import os.log
 
 /// IdentityLookup framework'ü ile gelen SMS'leri filtreleyen ve iOS 14+ alt kategorilerine ayıran sistem extension'ı
+@objc(MessageFilterExtension)
 final class MessageFilterExtension: ILMessageFilterExtension, ILMessageFilterQueryHandling {
     
     private let logger = Logger(subsystem: "com.app.spamfilter.MessageFilter", category: "SMSFilter")

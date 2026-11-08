@@ -5,10 +5,11 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "dark",
     "ios": {
       "bundleIdentifier": "com.app.spamfilter",
       "supportsTablet": false,
+      "icon": "./assets/icon.png",
       "entitlements": {
         "com.apple.security.application-groups": [
           "group.com.app.spamfilter"
